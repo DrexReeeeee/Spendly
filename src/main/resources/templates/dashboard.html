@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Spendly Dashboard</title>
+    <link rel="stylesheet" th:href="@{/css/dashboard.css}">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+<div class="dashboard-container">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <h2>Spendly</h2>
+        <nav>
+            <a href="/dashboard">Dashboard</a>
+            <a href="/expenses">All Expenses</a>
+            <a href="/logout">Logout</a>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main>
+        <header>
+            <h1>Welcome, <span th:text="${user.username}">User</span>!</h1>
+        </header>
+
+        <div class="dashboard-layout">
+            <div class="left-column">
+                <!-- Stats Cards -->
+                <div class="stats-cards">
+                    <div class="stat-card">
+                        <div class="stat-main">
+                            <span class="stat-value" id="totalExpenses">₱0.00</span>
+                            <span class="stat-label">All Time Total</span>
+                        </div>
+                        <div class="stat-change">
+                            YoY: <span id="yoyChange" class="negative">0%</span>
+                        </div>
+                        <div class="yearly-breakdown">
+                            <div class="year-item">
+                                <span class="year-name"><span id="currentYear"></span></span>
+                                <span class="year-value" id="currentYearTotal">₱0.00</span>
+                            </div>
+                            <div class="year-item">
+                                <span class="year-name"><span id="lastYear"></span></span>
+                                <span class="year-value" id="lastYearTotal">₱0.00</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-main">
+                            <span class="stat-value" id="numExpenses">0</span>
+                            <span class="stat-label">Total Expenses</span>
+                        </div>
+                        <div class="stat-change positive">+ 0</div>
+                    </div>
+
+                    <div class="stat-card">
+                        <div class="stat-main">
+                            <span class="stat-value" id="highestExpense">₱0.00</span>
+                            <span class="stat-label">Highest Expense</span>
+                        </div>
+                        <div class="stat-change">- 0</div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-container">
+                    <div class="chart-wrapper">
+                        <div class="chart-header">
+                            <div class="chart-title">Yearly Trend (Last 5 Years)</div>
+                        </div>
+                        <div class="chart-container" id="yearlyLineChart-container">
+                            <canvas id="yearlyLineChart"></canvas>
+                        </div>
+                        <div class="chart-legend">
+                            <div class="legend-item">
+                                <div class="legend-color primary"></div>
+                                <span>Total Expenses</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chart-wrapper">
+                        <div class="chart-header">
+                            <div class="chart-title">Expenses by Category</div>
+                        </div>
+                        <div class="chart-container" id="categoryBarChart-container">
+                            <canvas id="categoryBarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Monthly Expenses Breakdown Table -->
+                <div class="table-container">
+                    <h2>Monthly Expenses Breakdown - <span id="currentYearLabel"></span></h2>
+                    <table id="monthlyExpensesTable">
+                        <thead>
+                        <tr>
+                            <th>Month</th>
+                            <th>Total Amount</th>
+                            <th># of Expenses</th>
+                            <th>Avg per Expense</th>
+                            <th>vs Previous Month</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="right-column">
+                <!-- Category Distribution -->
+                <div class="chart-wrapper">
+                    <div class="chart-header">
+                        <div class="chart-title">Category Distribution</div>
+                    </div>
+                    <div class="chart-container" id="categoryPieChart-container">
+                        <canvas id="categoryPieChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Top 5 Highest Expenses -->
+                <div class="table-container">
+                    <h2>Top 5 Highest Expenses</h2>
+                    <table id="topExpensesTable">
+                        <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Amount</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                        </tr>
+                        </thead>
+                        <tbody></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script th:inline="javascript">
+// Set current year labels
+const currentYear = new Date().getFullYear();
+document.getElementById('currentYear').textContent = currentYear;
+document.getElementById('lastYear').textContent = currentYear - 1;
+document.getElementById('currentYearLabel').textContent = currentYear;
+
+var pieCtx = document.getElementById('categoryPieChart').getContext('2d');
+var barCtx = document.getElementById('categoryBarChart').getContext('2d');
+var lineCtx = document.getElementById('yearlyLineChart').getContext('2d');
+
+var chartColors = ['#6a11cb','#2575fc','#4CAF50','#FF6384','#36A2EB','#FFCE56','#FFA500','#00CED1'];
+
+var pieChart = new Chart(pieCtx, { 
+    type:'pie', 
+    data:{ 
+        labels:[], 
+        datasets:[{
+            label:'Category Distribution', 
+            data:[], 
+            backgroundColor:chartColors, 
+            hoverOffset:10,
+            borderWidth: 2,
+            borderColor: '#fff'
+        }] 
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                position: 'right'
+            }
+        }
+    }
+});
+
+var barChart = new Chart(barCtx, { 
+    type:'bar', 
+    data:{ 
+        labels:[], 
+        datasets:[{
+            label:'Category Totals', 
+            data:[], 
+            backgroundColor: chartColors
+        }] 
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '₱' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+var lineChart = new Chart(lineCtx, { 
+    type:'line', 
+    data:{ 
+        labels:[], 
+        datasets:[{
+            label:'Yearly Expenses', 
+            data:[], 
+            borderColor:'#6a11cb', 
+            backgroundColor:'rgba(106, 17, 203, 0.1)', 
+            fill:true, 
+            tension:0.3,
+            borderWidth: 3
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false
+            }
+        },
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    callback: function(value) {
+                        return '₱' + value.toLocaleString();
+                    }
+                }
+            }
+        }
+    }
+});
+
+// Function to format date for top expenses (date only)
+function formatDateOnly(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+}
+
+// Function to format currency in Philippine Peso
+function formatPeso(amount) {
+    return '₱' + amount.toFixed(2);
+}
+
+// Function to get month name from month number
+function getMonthName(monthNumber) {
+    const months = [
+        'January', 'February', 'March', 'April', 'May', 'June',
+        'July', 'August', 'September', 'October', 'November', 'December'
+    ];
+    return months[monthNumber - 1] || '';
+}
+
+// Function to calculate percentage change with text indicator
+function getPercentageChange(current, previous) {
+    if (previous === 0) return { text: 'No data', change: 0, type: 'neutral' };
+    
+    const change = ((current - previous) / previous * 100);
+    const absChange = Math.abs(change);
+    
+    if (absChange < 5) {
+        return { 
+            text: 'Stable', 
+            change: change, 
+            type: 'neutral' 
+        };
+    } else if (change > 0) {
+        return { 
+            text: `+${change.toFixed(1)}%`, 
+            change: change, 
+            type: 'increase' 
+        };
+    } else {
+        return { 
+            text: `${change.toFixed(1)}%`, 
+            change: change, 
+            type: 'decrease' 
+        };
+    }
+}
+
+function refreshDashboard() {
+    $.get("/expenses/list", function(data){
+        // Top 5 highest expenses (sort by amount, show date only)
+        var top5 = data.sort((a,b)=> b.amount - a.amount).slice(0,5);
+        var topHTML = top5.map(e=>`<tr><td>${e.title}</td><td>${formatPeso(e.amount)}</td><td>${e.category}</td><td>${formatDateOnly(e.date)}</td></tr>`).join('');
+        $("#topExpensesTable tbody").html(topHTML);
+
+        // Stats
+        var total = data.reduce((sum,e)=>sum+e.amount,0);
+        var highest = data.reduce((max,e)=>e.amount>max?e.amount:max,0);
+        $("#totalExpenses").text(formatPeso(total));
+        $("#numExpenses").text(data.length);
+        $("#highestExpense").text(formatPeso(highest));
+
+        // Yearly calculations
+        var currentYear = new Date().getFullYear();
+        var lastYear = currentYear - 1;
+        
+        var currentYearTotal = data
+            .filter(e => new Date(e.date).getFullYear() === currentYear)
+            .reduce((sum,e)=>sum+e.amount,0);
+            
+        var lastYearTotal = data
+            .filter(e => new Date(e.date).getFullYear() === lastYear)
+            .reduce((sum,e)=>sum+e.amount,0);
+
+        // Update yearly breakdown
+        $("#currentYearTotal").text(formatPeso(currentYearTotal));
+        $("#lastYearTotal").text(formatPeso(lastYearTotal));
+        
+        // Calculate year-over-year change
+        var yoyChange = lastYearTotal > 0 ? ((currentYearTotal - lastYearTotal) / lastYearTotal * 100).toFixed(1) : 0;
+        var yoyElement = $("#yoyChange");
+        yoyElement.text(yoyChange + "%");
+        if (yoyChange > 0) {
+            yoyElement.removeClass('negative').addClass('positive');
+        } else {
+            yoyElement.removeClass('positive').addClass('negative');
+        }
+
+        // Update expense count change
+        var currentYearCount = data.filter(e => new Date(e.date).getFullYear() === currentYear).length;
+        var lastYearCount = data.filter(e => new Date(e.date).getFullYear() === lastYear).length;
+        var countChange = currentYearCount - lastYearCount;
+        var countElement = $(".stat-card:nth-child(2) .stat-change");
+        countElement.text(countChange >= 0 ? "+ " + countChange : "- " + Math.abs(countChange));
+        countElement.toggleClass('positive', countChange >= 0);
+        countElement.toggleClass('negative', countChange < 0);
+
+        // Monthly Expenses Breakdown
+        var monthlyData = {};
+        var currentYearData = data.filter(e => new Date(e.date).getFullYear() === currentYear);
+        
+        // Initialize all months for current year
+        for (let month = 1; month <= 12; month++) {
+            var monthKey = `${currentYear}-${month.toString().padStart(2, '0')}`;
+            monthlyData[monthKey] = {
+                total: 0,
+                count: 0,
+                expenses: []
+            };
+        }
+        
+        // Calculate monthly totals
+        currentYearData.forEach(e=>{
+            let date = new Date(e.date);
+            let monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
+            if (monthlyData[monthKey]) {
+                monthlyData[monthKey].total += e.amount;
+                monthlyData[monthKey].count += 1;
+                monthlyData[monthKey].expenses.push(e);
+            }
+        });
+
+        // Generate monthly table HTML
+        var monthlyHTML = '';
+        var previousMonthTotal = 0;
+        var monthKeys = Object.keys(monthlyData).sort().reverse();
+        
+        monthKeys.forEach((monthKey, index) => {
+            var monthData = monthlyData[monthKey];
+            var monthNumber = parseInt(monthKey.split('-')[1]);
+            var monthName = getMonthName(monthNumber);
+            var avgExpense = monthData.count > 0 ? monthData.total / monthData.count : 0;
+            
+            // Calculate percentage change (compare with previous month)
+            var changeData = { text: 'No data', change: 0, type: 'neutral' };
+            if (index < monthKeys.length - 1) {
+                var previousMonthKey = monthKeys[index + 1];
+                var previousMonthData = monthlyData[previousMonthKey];
+                changeData = getPercentageChange(monthData.total, previousMonthData.total);
+            }
+            
+            monthlyHTML += `<tr>
+                <td>${monthName}</td>
+                <td>${formatPeso(monthData.total)}</td>
+                <td>${monthData.count}</td>
+                <td>${formatPeso(avgExpense)}</td>
+                <td class="trend-${changeData.type}">${changeData.text}</td>
+            </tr>`;
+        });
+        
+        $("#monthlyExpensesTable tbody").html(monthlyHTML);
+
+        // Charts - Category distribution
+        var categories = {};
+        var displayNames = {};
+        data.forEach(e=>{
+            var k = e.category.toLowerCase();
+            categories[k]=(categories[k]||0)+e.amount;
+            if(!displayNames[k]) displayNames[k] = e.category.charAt(0).toUpperCase()+e.category.slice(1).toLowerCase();
+        });
+
+        pieChart.data.labels = Object.keys(categories).map(k=>displayNames[k]);
+        pieChart.data.datasets[0].data = Object.values(categories);
+        pieChart.update();
+
+        barChart.data.labels = Object.keys(categories).map(k=>displayNames[k]);
+        barChart.data.datasets[0].data = Object.values(categories);
+        barChart.update();
+
+        // Yearly trend data (last 5 years)
+        var yearlyTotals = {};
+        var currentYear = new Date().getFullYear();
+        
+        // Initialize last 5 years
+        for (let i = 4; i >= 0; i--) {
+            var year = currentYear - i;
+            yearlyTotals[year] = 0;
+        }
+        
+        // Calculate totals for each year
+        data.forEach(e=>{
+            let year = new Date(e.date).getFullYear();
+            if (yearlyTotals.hasOwnProperty(year)) {
+                yearlyTotals[year] = (yearlyTotals[year] || 0) + e.amount;
+            }
+        });
+
+        // Update line chart for yearly trend
+        var years = Object.keys(yearlyTotals).sort();
+        lineChart.data.labels = years;
+        lineChart.data.datasets[0].data = years.map(y=>yearlyTotals[y]);
+        lineChart.data.datasets[0].label = 'Yearly Expenses';
+        lineChart.update();
+    });
+}
+
+refreshDashboard();
+</script>
+</body>
+</html>

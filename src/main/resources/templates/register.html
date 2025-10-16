@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Register - Spendly</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/signup.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+</head>
+<body>
+    <!-- Animated background bubbles -->
+    <div class="bg-bubble bubble-1"></div>
+    <div class="bg-bubble bubble-2"></div>
+    <div class="bg-bubble bubble-3"></div>
+    <div class="bg-bubble bubble-4"></div>
+    <div class="bg-bubble bubble-5"></div>
+    <div class="bg-bubble bubble-6"></div>
+
+    <div class="register-container">
+        <div class="logo">
+            <i class="fas fa-chart-pie"></i>
+            <span class="logo-text">Spendly</span>
+        </div>
+        
+        <h2>Create Your Account</h2>
+        
+        <form th:action="@{/register}" th:object="${user}" method="post">
+            <div class="form-group">
+                <i class="fas fa-user"></i>
+                <input type="text" th:field="*{username}" placeholder="Username" required/>
+                <div class="focus-line"></div>
+            </div>
+            
+            <div class="form-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" th:field="*{email}" placeholder="Email" required/>
+                <div class="focus-line"></div>
+            </div>
+            
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" th:field="*{password}" id="password" placeholder="Password" required/>
+                <div class="focus-line"></div>
+                <div class="password-strength">
+                    <div class="strength-bar" id="strength-bar"></div>
+                </div>
+            </div>
+            
+            <button type="submit" id="register-btn">Register</button>
+        </form>
+        
+        <p class="message" th:text="${message}"></p>
+        
+        <div class="login-link">
+            <a th:href="@{/login}">Already have an account? Login</a>
+        </div>
+        
+        <div class="benefits">
+            <div class="benefit">
+                <i class="fas fa-check-circle"></i>
+                <span>Track all expenses</span>
+            </div>
+            <div class="benefit">
+                <i class="fas fa-check-circle"></i>
+                <span>Set monthly budgets</span>
+            </div>
+            <div class="benefit">
+                <i class="fas fa-check-circle"></i>
+                <span>Visual spending reports</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Ripple effect for register button
+        document.getElementById('register-btn').addEventListener('click', function(e) {
+            const btn = e.currentTarget;
+            const ripple = document.createElement('span');
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            
+            btn.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+
+        // Add focus line animation to input fields
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.querySelector('.focus-line').style.width = '100%';
+            });
+            
+            input.addEventListener('blur', function() {
+                if (this.value === '') {
+                    this.parentElement.querySelector('.focus-line').style.width = '0';
+                }
+            });
+        });
+
+        // Password strength indicator
+        const passwordInput = document.getElementById('password');
+        const strengthBar = document.getElementById('strength-bar');
+        
+        passwordInput.addEventListener('input', function() {
+            const password = this.value;
+            let strength = 0;
+            
+            if (password.length >= 8) strength += 25;
+            if (/[A-Z]/.test(password)) strength += 25;
+            if (/[0-9]/.test(password)) strength += 25;
+            if (/[^A-Za-z0-9]/.test(password)) strength += 25;
+            
+            strengthBar.style.width = strength + '%';
+            
+            if (strength < 50) {
+                strengthBar.style.background = '#e74c3c';
+            } else if (strength < 75) {
+                strengthBar.style.background = '#f39c12';
+            } else {
+                strengthBar.style.background = '#2ecc71';
+            }
+        });
+    </script>
+</body>
+</html>

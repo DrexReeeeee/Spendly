@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login - Spendly</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" th:href="@{/css/login.css}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+   
+</head>
+<body>
+    <!-- Animated background bubbles -->
+    <div class="bg-bubble bubble-1"></div>
+    <div class="bg-bubble bubble-2"></div>
+    <div class="bg-bubble bubble-3"></div>
+    <div class="bg-bubble bubble-4"></div>
+    <div class="bg-bubble bubble-5"></div>
+    <div class="bg-bubble bubble-6"></div>
+
+    <div class="login-container">
+        <div class="logo">
+            <i class="fas fa-chart-pie"></i>
+            <span class="logo-text">Spendly</span>
+        </div>
+        
+        <h2>Login to Your Account</h2>
+        
+        <form th:action="@{/login}" th:object="${user}" method="post">
+            <div class="form-group">
+                <i class="fas fa-envelope"></i>
+                <input type="email" th:field="*{email}" placeholder="Email" required/>
+                <div class="focus-line"></div>
+            </div>
+            
+            <div class="form-group">
+                <i class="fas fa-lock"></i>
+                <input type="password" th:field="*{password}" placeholder="Password" required/>
+                <div class="focus-line"></div>
+            </div>
+            
+            <button type="submit" id="login-btn">Login</button>
+        </form>
+        
+        <p class="error-message" th:text="${error}"></p>
+        
+        <div class="register-link">
+            <a th:href="@{/register}">Don't have an account? Register</a>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <i class="fas fa-check-circle"></i>
+                <span>Track Expenses</span>
+            </div>
+            <div class="feature">
+                <i class="fas fa-check-circle"></i>
+                <span>Set Budgets</span>
+            </div>
+            <div class="feature">
+                <i class="fas fa-check-circle"></i>
+                <span>Visual Reports</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('login-btn').addEventListener('click', function(e) {
+            const btn = e.currentTarget;
+            const ripple = document.createElement('span');
+            const rect = btn.getBoundingClientRect();
+            const size = Math.max(rect.width, rect.height);
+            const x = e.clientX - rect.left - size / 2;
+            const y = e.clientY - rect.top - size / 2;
+            
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = x + 'px';
+            ripple.style.top = y + 'px';
+            ripple.classList.add('ripple');
+            
+            btn.appendChild(ripple);
+            
+            setTimeout(() => {
+                ripple.remove();
+            }, 600);
+        });
+
+        const inputs = document.querySelectorAll('input');
+        inputs.forEach(input => {
+            input.addEventListener('focus', function() {
+                this.parentElement.querySelector('.focus-line').style.width = '100%';
+            });
+            
+            input.addEventListener('blur', function() {
+                if (this.value === '') {
+                    this.parentElement.querySelector('.focus-line').style.width = '0';
+                }
+            });
+        });
+    </script>
+</body>
+</html>
