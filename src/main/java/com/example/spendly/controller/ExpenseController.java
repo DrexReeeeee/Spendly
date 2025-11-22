@@ -1,7 +1,9 @@
 package com.example.spendly.controller;
 
+import com.example.spendly.model.Category;
 import com.example.spendly.model.Expense;
 import com.example.spendly.model.User;
+import com.example.spendly.service.CategoryService;
 import com.example.spendly.service.ExpenseService;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,33 +14,34 @@ import org.springframework.web.bind.annotation.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-@Controller // Use @Controller for Thymeleaf pages
+@Controller
 @RequestMapping("/expenses")
 public class ExpenseController {
 
     @Autowired
     private ExpenseService expenseService;
 
-    // ===============================
-    // 1. Thymeleaf page: All expenses
-    // ===============================
+    @Autowired
+    private CategoryService categoryService;
+
     @GetMapping("")
     public String expensesPage(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
         if(user == null) {
-            return "redirect:/login"; // redirect if not logged in
+            return "redirect:/login";
         }
 
         List<Expense> expenses = expenseService.getExpenses(user);
         model.addAttribute("userExpenses", expenses);
 
-        return "all-expenses"; // Thymeleaf template: all-expenses.html
+        // load categories for initial page render (optional)
+        model.addAttribute("categories", categoryService.getCategories(user));
+
+        return "all-expenses";
     }
 
-    // ===============================
-    // 2. REST endpoint: List expenses JSON
-    // ===============================
     @GetMapping("/list")
     @ResponseBody
     public List<Expense> listExpenses(HttpSession session) {
@@ -49,32 +52,28 @@ public class ExpenseController {
         return new ArrayList<>();
     }
 
-    // ===============================
-    // 3. Add new expense (REST)
-    // ===============================
     @PostMapping("/add")
     @ResponseBody
     public Expense addExpense(@RequestParam String title,
                               @RequestParam double amount,
-                              @RequestParam String category,
+                              @RequestParam Long categoryId,
                               HttpSession session) {
         User user = (User) session.getAttribute("user");
         if(user != null) {
+            Optional<Category> catOpt = categoryService.findById(categoryId);
+            Category category = catOpt.orElse(null);
             Expense expense = new Expense(title, amount, LocalDate.now(), category, user);
             return expenseService.addExpense(expense);
         }
         return null;
     }
 
-    // ===============================
-    // 4. Update an existing expense (REST)
-    // ===============================
     @PostMapping("/update/{id}")
     @ResponseBody
     public Expense updateExpense(@PathVariable Long id,
                                  @RequestParam String title,
                                  @RequestParam double amount,
-                                 @RequestParam String category,
+                                 @RequestParam Long categoryId,
                                  HttpSession session) {
         User user = (User) session.getAttribute("user");
         if(user != null) {
@@ -86,16 +85,13 @@ public class ExpenseController {
             if(expense != null) {
                 expense.setTitle(title);
                 expense.setAmount(amount);
-                expense.setCategory(category);
+                categoryService.findById(categoryId).ifPresent(expense::setCategory);
                 return expenseService.updateExpense(expense);
             }
         }
         return null;
     }
 
-    // ===============================
-    // 5. Delete an expense (REST)
-    // ===============================
     @PostMapping("/delete/{id}")
     @ResponseBody
     public String deleteExpense(@PathVariable Long id, HttpSession session) {

@@ -1,5 +1,6 @@
 package com.example.spendly.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 
 import java.time.LocalDate;
@@ -12,20 +13,21 @@ public class Expense {
     private Long id;
 
     private String title;
-
     private double amount;
-
     private LocalDate date;
 
-    private String category;
+    @ManyToOne
+    @JoinColumn(name = "category_id")
+    private Category category;
 
     @ManyToOne
     @JoinColumn(name = "user_id")
+    @JsonIgnore
     private User user;
 
     public Expense() {}
 
-    public Expense(String title, double amount, LocalDate date, String category, User user) {
+    public Expense(String title, double amount, LocalDate date, Category category, User user) {
         this.title = title;
         this.amount = amount;
         this.date = date;
@@ -33,7 +35,7 @@ public class Expense {
         this.user = user;
     }
 
-    // Getters and setters
+    // Getters & setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -46,8 +48,8 @@ public class Expense {
     public LocalDate getDate() { return date; }
     public void setDate(LocalDate date) { this.date = date; }
 
-    public String getCategory() { return category; }
-    public void setCategory(String category) { this.category = category; }
+    public Category getCategory() { return category; }
+    public void setCategory(Category category) { this.category = category; }
 
     public User getUser() { return user; }
     public void setUser(User user) { this.user = user; }

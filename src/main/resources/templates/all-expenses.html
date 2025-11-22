@@ -10,7 +10,7 @@
 <body>
 <div class="dashboard-container">
     <aside class="sidebar">
-        <h2>Spendly</h2>
+        <h2><i class="fas fa-chart-pie"></i> Spendly</h2>
         <nav>
             <a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a>
             <a href="/expenses" class="active"><i class="fas fa-receipt"></i> All Expenses</a>
@@ -52,13 +52,46 @@
                         <i class="fas fa-peso-sign form-icon"></i>
                     </div>
                     <div class="form-group">
-                        <input type="text" name="category" placeholder="Category" required>
+                        <select name="categoryId" id="addCategorySelect" required>
+                            <option value="">Select Category</option>
+                        </select>
                         <i class="fas fa-folder form-icon"></i>
                     </div>
                     <button type="submit" class="submit-btn">
                         <i class="fas fa-plus"></i> Add Expense
                     </button>
                 </form>
+            </div>
+
+            <!-- Manage Categories -->
+            <div class="form-card">
+                <div class="form-header">
+                    <h3><i class="fas fa-folder-plus"></i> Manage Categories</h3>
+                </div>
+                <div class="form-grid">
+                    <input type="text" id="newCategoryName" placeholder="New Category Name">
+                    <button id="addCategoryBtn" class="submit-btn"><i class="fas fa-plus"></i> Add Category</button>
+                </div>
+                
+                <div class="category-list-container">
+                    <ul id="categoryList"></ul>
+                    
+                    <!-- Category Pagination -->
+                    <div class="category-pagination" id="categoryPagination" style="display: none;">
+                        <div class="category-pagination-info" id="categoryPaginationInfo">
+                            Showing 0 of 0 categories
+                        </div>
+                        <div class="category-pagination-controls">
+                            <button class="category-pagination-btn" id="categoryPrevPage" disabled>
+                                <i class="fas fa-chevron-left"></i> Prev
+                            </button>
+                            <span class="category-pagination-page" id="categoryCurrentPage">1</span>
+                            <button class="category-pagination-btn" id="categoryNextPage" disabled>
+                                Next <i class="fas fa-chevron-right"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Search and Filters -->
@@ -98,19 +131,24 @@
                     </thead>
                     <tbody></tbody>
                 </table>
+                <div class="pagination">
+                    <button id="prevPage">&lt; Prev</button>
+                    <span id="currentPage">1</span>
+                    <button id="nextPage">Next &gt;</button>
+                </div>
             </div>
         </div>
     </main>
 </div>
 
-<!-- Edit Modal -->
+<!-- Edit Expense Modal -->
 <div id="editModal" class="modal">
     <div class="modal-content">
         <div class="modal-header">
             <h3><i class="fas fa-edit"></i> Edit Expense</h3>
             <span class="close">&times;</span>
         </div>
-        <form id="editForm" method="post" class="modal-form">
+        <form id="editForm" class="modal-form">
             <div class="form-group">
                 <input type="text" name="title" id="editTitle" placeholder="Expense Title" required>
                 <i class="fas fa-tag form-icon"></i>
@@ -120,211 +158,313 @@
                 <i class="fas fa-peso-sign form-icon"></i>
             </div>
             <div class="form-group">
-                <input type="text" name="category" id="editCategory" placeholder="Category" required>
+                <select name="categoryId" id="editCategorySelect" required>
+                    <option value="">Select Category</option>
+                </select>
                 <i class="fas fa-folder form-icon"></i>
             </div>
             <div class="modal-actions">
                 <button type="button" class="cancel-btn" onclick="closeModal()">Cancel</button>
-                <button type="submit" class="save-btn">
-                    <i class="fas fa-save"></i> Save Changes
-                </button>
+                <button type="submit" class="save-btn"><i class="fas fa-save"></i> Save Changes</button>
             </div>
         </form>
     </div>
 </div>
 
-<script>
-// Ensure modal is hidden on page load
-document.addEventListener('DOMContentLoaded', function() {
-    var modal = document.getElementById("editModal");
-    modal.style.display = "none";
-});
+<!-- Edit/Delete Category Modal -->
+<div id="categoryModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="fas fa-folder"></i> Edit Category</h3>
+            <span class="close" onclick="closeCategoryModal()">&times;</span>
+        </div>
+        <div class="modal-form">
+            <input type="hidden" id="editCategoryId">
+            <div class="form-group">
+                <input type="text" id="editCategoryName" placeholder="Category Name" required>
+            </div>
+            <div class="modal-actions">
+                <button class="cancel-btn" onclick="closeCategoryModal()">Cancel</button>
+                <button class="save-btn" id="saveCategoryBtn"><i class="fas fa-save"></i> Save</button>
+                <button class="delete-btn" id="deleteCategoryBtn"><i class="fas fa-trash"></i> Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
 
+<script>
 var modal = document.getElementById("editModal");
+var categoryModal = document.getElementById("categoryModal");
 var span = document.getElementsByClassName("close")[0];
 var form = document.getElementById("editForm");
-var titleInput = document.getElementById("editTitle");
-var amountInput = document.getElementById("editAmount");
-var categoryInput = document.getElementById("editCategory");
 
-// Improved close functions
-function closeModal() {
-    modal.style.display = "none";
-}
-
+function closeModal(){ modal.style.display="none"; }
 span.onclick = closeModal;
+window.onclick = (event)=>{ if(event.target==modal) closeModal(); if(event.target==categoryModal) closeCategoryModal(); }
+document.addEventListener('keydown', function(event){ if(event.key==='Escape'){ closeModal(); closeCategoryModal(); } });
 
-window.onclick = (event) => { 
-    if(event.target == modal) {
-        closeModal();
-    }
-}
+// ------------------ UTILS ------------------
+function formatPeso(amount){ return '₱'+Number(amount).toLocaleString(undefined,{minimumFractionDigits:2, maximumFractionDigits:2}); }
+function formatDate(date){ return new Date(date).toLocaleDateString(); }
 
-// Close modal with Escape key
-document.addEventListener('keydown', function(event) {
-    if (event.key === 'Escape') {
-        closeModal();
-    }
-});
+// ------------------ CATEGORY MANAGEMENT ------------------
+let categoryCurrentPage = 1;
+const categoriesPerPage = 5;
+let allCategories = [];
 
-function formatPeso(amount) {
-    return '₱' + amount.toFixed(2);
-}
-
-function formatDate(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-}
-
-function refreshTable() {
-    $.get("/expenses/list", function(data){
-        var html = "";
-        var totalAmount = 0;
-        
-        // Sort by newest first
-        data.sort((a,b) => new Date(b.date) - new Date(a.date));
-        
-        data.forEach(e => {
-            totalAmount += e.amount;
-            html += `<tr>
-                <td class="expense-title">
-                    <i class="fas fa-receipt"></i>
-                    <span>${e.title}</span>
-                </td>
-                <td class="expense-amount">${formatPeso(e.amount)}</td>
-                <td class="expense-category">
-                    <span class="category-badge">${e.category}</span>
-                </td>
-                <td class="expense-date">${formatDate(e.date)}</td>
-                <td class="action-buttons">
-                    <button class="edit-btn" data-id="${e.id}" data-title="${e.title}" data-amount="${e.amount}" data-category="${e.category}">
-                        <i class="fas fa-edit"></i> Edit
-                    </button>
-                    <button class="delete-btn" data-id="${e.id}">
-                        <i class="fas fa-trash"></i> Delete
-                    </button>
-                </td>
-            </tr>`;
-        });
-        
-        $("#expensesTable tbody").html(html);
-        $("#totalExpensesCount").text(data.length);
-        $("#totalExpensesAmount").text(formatPeso(totalAmount));
-        
-        attachModalHandlers();
-        attachDeleteHandlers();
-        attachFilterHandlers();
+function loadCategories(){
+    $.get("/categories/list", function(data){
+        allCategories = data;
+        renderCategories();
+        updateCategoryDropdowns();
     });
 }
 
-// Add expense
+function renderCategories() {
+    const totalPages = Math.ceil(allCategories.length / categoriesPerPage);
+    const startIndex = (categoryCurrentPage - 1) * categoriesPerPage;
+    const endIndex = startIndex + categoriesPerPage;
+    const currentCategories = allCategories.slice(startIndex, endIndex);
+
+    let listHtml = '';
+    
+    if (currentCategories.length === 0) {
+        listHtml = `
+            <div class="category-empty-state">
+                <i class="fas fa-folder-open"></i>
+                <h4>No Categories Found</h4>
+                <p>Add your first category to get started</p>
+            </div>
+        `;
+        $("#categoryPagination").hide();
+    } else {
+        currentCategories.forEach(cat => {
+            listHtml += `
+                <li>
+                    <span class="category-name">${cat.name}</span>
+                    <div class="category-actions">
+                        <button class="editCatBtn" data-id="${cat.id}" data-name="${cat.name}">
+                            <i class="fas fa-edit"></i> Edit
+                        </button>
+                        <button class="deleteCatBtn" data-id="${cat.id}">
+                            <i class="fas fa-trash"></i> Delete
+                        </button>
+                    </div>
+                </li>
+            `;
+        });
+        $("#categoryPagination").show();
+    }
+    
+    $("#categoryList").html(listHtml);
+    updateCategoryPagination();
+    attachCategoryHandlers();
+}
+
+function updateCategoryPagination() {
+    const totalPages = Math.ceil(allCategories.length / categoriesPerPage);
+    const startIndex = (categoryCurrentPage - 1) * categoriesPerPage + 1;
+    const endIndex = Math.min(categoryCurrentPage * categoriesPerPage, allCategories.length);
+    
+    $("#categoryPaginationInfo").text(`Showing ${startIndex}-${endIndex} of ${allCategories.length} categories`);
+    $("#categoryCurrentPage").text(categoryCurrentPage);
+    
+    $("#categoryPrevPage").prop('disabled', categoryCurrentPage === 1);
+    $("#categoryNextPage").prop('disabled', categoryCurrentPage === totalPages || totalPages === 0);
+}
+
+function updateCategoryDropdowns() {
+    let options = `<option value="">Select Category</option>`;
+    allCategories.forEach(cat => {
+        options += `<option value="${cat.id}">${cat.name}</option>`;
+    });
+    $("#addCategorySelect, #editCategorySelect").html(options);
+}
+
+// Category Pagination Event Handlers
+$("#categoryPrevPage").click(function(){
+    if (categoryCurrentPage > 1) {
+        categoryCurrentPage--;
+        renderCategories();
+    }
+});
+
+$("#categoryNextPage").click(function(){
+    const totalPages = Math.ceil(allCategories.length / categoriesPerPage);
+    if (categoryCurrentPage < totalPages) {
+        categoryCurrentPage++;
+        renderCategories();
+    }
+});
+
+// Add Category
+$("#addCategoryBtn").click(function(){
+    const name = $("#newCategoryName").val().trim();
+    if (!name) {
+        showNotification('Please enter a category name', 'error');
+        return;
+    }
+    
+    $.post("/categories/add", {name}, function(){
+        $("#newCategoryName").val('');
+        loadCategories();
+        showNotification('Category added successfully!', 'success');
+    }).fail(() => showNotification('Error adding category', 'error'));
+});
+
+// Handle Enter key in category input
+$("#newCategoryName").keypress(function(e){
+    if(e.which === 13){
+        $("#addCategoryBtn").click();
+        return false;
+    }
+});
+
+// Edit/Delete Category Modal
+function attachCategoryHandlers(){
+    $(".editCatBtn").click(function(){
+        $("#editCategoryId").val($(this).data("id"));
+        $("#editCategoryName").val($(this).data("name"));
+        categoryModal.style.display = "block";
+    });
+    
+    $(".deleteCatBtn").click(function(){
+        const categoryId = $(this).data("id");
+        const categoryName = allCategories.find(cat => cat.id === categoryId)?.name || 'this category';
+        
+        if(confirm(`Are you sure you want to delete "${categoryName}"? This action cannot be undone.`)){
+            $.post(`/categories/delete/${categoryId}`, function(){
+                loadCategories();
+                showNotification('Category deleted successfully!', 'success');
+            }).fail(() => showNotification('Error deleting category', 'error'));
+        }
+    });
+}
+
+$("#saveCategoryBtn").click(function(){
+    const id = $("#editCategoryId").val();
+    const name = $("#editCategoryName").val().trim();
+    
+    if (!name) {
+        showNotification('Please enter a category name', 'error');
+        return;
+    }
+    
+    $.post(`/categories/update/${id}`, {name}, function(){
+        categoryModal.style.display = "none";
+        loadCategories();
+        showNotification('Category updated successfully!', 'success');
+    }).fail(() => showNotification('Error updating category', 'error'));
+});
+
+$("#deleteCategoryBtn").click(function(){
+    const id = $("#editCategoryId").val();
+    const categoryName = $("#editCategoryName").val();
+    
+    if(confirm(`Are you sure you want to permanently delete "${categoryName}"? This will also remove this category from all associated expenses.`)){
+        $.post(`/categories/delete/${id}`, function(){
+            categoryModal.style.display = "none";
+            loadCategories();
+            showNotification('Category deleted successfully!', 'success');
+        }).fail(() => showNotification('Error deleting category', 'error'));
+    }
+});
+
+function closeCategoryModal(){ 
+    categoryModal.style.display = "none"; 
+}
+
+// ------------------ EXPENSE MANAGEMENT ------------------
+let currentPage=1, rowsPerPage=5;
+
+function refreshTable(){
+    $.get("/expenses/list", function(data){
+        let totalAmount=0;
+        data.sort((a,b)=>new Date(b.date)-new Date(a.date));
+        const totalPages=Math.ceil(data.length/rowsPerPage);
+        if(currentPage>totalPages) currentPage=totalPages||1;
+        const start=(currentPage-1)*rowsPerPage, end=start+rowsPerPage;
+        let html='';
+        data.slice(start,end).forEach(e=>{
+            totalAmount+=e.amount;
+            html+=`<tr>
+                <td class="expense-title"><i class="fas fa-receipt"></i> <span>${e.title}</span></td>
+                <td class="expense-amount">${formatPeso(e.amount)}</td>
+                <td class="expense-category"><span class="category-badge">${e.category?e.category.name:''}</span></td>
+                <td class="expense-date">${formatDate(e.date)}</td>
+                <td class="action-buttons">
+                    <button class="edit-btn" data-id="${e.id}" data-title="${e.title}" data-amount="${e.amount}" data-category-id="${e.category?e.category.id:''}"><i class="fas fa-edit"></i> Edit</button>
+                    <button class="delete-btn" data-id="${e.id}"><i class="fas fa-trash"></i> Delete</button>
+                </td>
+            </tr>`;
+        });
+        $("#expensesTable tbody").html(html);
+        $("#totalExpensesCount").text(data.length);
+        $("#totalExpensesAmount").text(formatPeso(totalAmount));
+        $("#currentPage").text(currentPage);
+        attachExpenseHandlers();
+    });
+}
+
+$("#prevPage").click(function(){ if(currentPage>1){ currentPage--; refreshTable(); } });
+$("#nextPage").click(function(){ currentPage++; refreshTable(); });
+
 $("#addExpenseForm").submit(function(e){
     e.preventDefault();
     $.post("/expenses/add", $(this).serialize(), function(){
         $("#addExpenseForm")[0].reset();
         refreshTable();
         showNotification('Expense added successfully!', 'success');
-    }).fail(function() {
-        showNotification('Error adding expense. Please try again.', 'error');
-    });
+    }).fail(()=>showNotification('Error adding expense','error'));
 });
 
-// Edit expense
-function attachModalHandlers() {
+function attachExpenseHandlers(){
     $(".edit-btn").click(function(){
-        var id = $(this).data("id");
-        titleInput.value = $(this).data("title");
-        amountInput.value = $(this).data("amount");
-        categoryInput.value = $(this).data("category");
-        form.action = '/expenses/update/' + id;
-        modal.style.display = "block";
+        const id=$(this).data("id");
+        $("#editTitle").val($(this).data("title"));
+        $("#editAmount").val($(this).data("amount"));
+        $("#editCategorySelect").val($(this).data("category-id"));
+        form.action='/expenses/update/'+id;
+        modal.style.display="block";
     });
-}
-
-form.onsubmit = function(e){
-    e.preventDefault();
-    $.post(form.action, $(form).serialize(), function(){ 
-        modal.style.display = "none"; 
-        refreshTable();
-        showNotification('Expense updated successfully!', 'success');
-    }).fail(function() {
-        showNotification('Error updating expense. Please try again.', 'error');
-    });
-}
-
-// Delete expense
-function attachDeleteHandlers() {
     $(".delete-btn").click(function(){
-        var id = $(this).data("id");
-        if(confirm('Are you sure you want to delete this expense?')) {
-            $.post('/expenses/delete/' + id, function(){ 
-                refreshTable();
-                showNotification('Expense deleted successfully!', 'success');
-            }).fail(function() {
-                showNotification('Error deleting expense. Please try again.', 'error');
-            });
+        const id=$(this).data("id");
+        if(confirm('Are you sure you want to delete this expense?')){
+            $.post('/expenses/delete/'+id, function(){ refreshTable(); showNotification('Expense deleted successfully!','success'); })
+            .fail(()=>showNotification('Error deleting expense','error'));
         }
     });
 }
 
-// Filter functionality
-function attachFilterHandlers() {
-    $(".filter-btn").click(function() {
-        $(".filter-btn").removeClass("active");
-        $(this).addClass("active");
-        
-        const filter = $(this).data("filter");
-        const rows = $("#expensesTable tbody tr");
-        
-        switch(filter) {
-            case 'recent':
-                // Already sorted by recent by default
-                rows.show();
-                break;
-            case 'high':
-                rows.sort((a, b) => {
-                    const amountA = parseFloat($(a).find('.expense-amount').text().replace('₱', ''));
-                    const amountB = parseFloat($(b).find('.expense-amount').text().replace('₱', ''));
-                    return amountB - amountA;
-                }).appendTo('#expensesTable tbody');
-                break;
-            default:
-                rows.show();
-        }
-    });
+form.onsubmit=function(e){
+    e.preventDefault();
+    $.post(form.action, $(form).serialize(), function(){ modal.style.display="none"; refreshTable(); showNotification('Expense updated successfully!','success'); })
+    .fail(()=>showNotification('Error updating expense','error'));
+};
+
+// Search & Filter
+$(".filter-btn").click(function(){
+    $(".filter-btn").removeClass("active"); $(this).addClass("active");
+    refreshTable();
+});
+
+function filterTable(){
+    const filter=$("#searchInput").val().toLowerCase();
+    $("#expensesTable tbody tr").each(function(){ $(this).toggle($(this).text().toLowerCase().includes(filter)); });
 }
 
-// Search/filter
-function filterTable() {
-    const filter = $("#searchInput").val().toLowerCase();
-    $("#expensesTable tbody tr").each(function(){
-        $(this).toggle($(this).text().toLowerCase().indexOf(filter) > -1);
-    });
-}
-
-// Notification system
-function showNotification(message, type) {
-    const notification = document.createElement('div');
-    notification.className = `notification ${type}`;
-    notification.innerHTML = `
-        <i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-circle'}"></i>
-        <span>${message}</span>
-    `;
-    
+// Notifications
+function showNotification(message,type){
+    const notification=document.createElement('div');
+    notification.className=`notification ${type}`;
+    notification.innerHTML=`<i class="fas fa-${type==='success'?'check-circle':'exclamation-circle'}"></i><span>${message}</span>`;
     document.body.appendChild(notification);
-    
-    setTimeout(() => {
-        notification.classList.add('show');
-    }, 100);
-    
-    setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => {
-            document.body.removeChild(notification);
-        }, 300);
-    }, 3000);
+    setTimeout(()=>notification.classList.add('show'),100);
+    setTimeout(()=>{ notification.classList.remove('show'); setTimeout(()=>document.body.removeChild(notification),300); },3000);
 }
 
+// Initialize
+loadCategories();
 refreshTable();
 </script>
 </body>

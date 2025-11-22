@@ -5,24 +5,37 @@
     <link rel="stylesheet" th:href="@{/css/dashboard.css}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
 </head>
 <body>
 <div class="dashboard-container">
 
     <!-- Sidebar -->
     <aside class="sidebar">
-        <h2>Spendly</h2>
+        <h2><i class="fas fa-chart-pie"></i> Spendly</h2>
         <nav>
-            <a href="/dashboard">Dashboard</a>
-            <a href="/expenses">All Expenses</a>
-            <a href="/logout">Logout</a>
+            <a href="/dashboard" class="active">
+                <i class="fas fa-tachometer-alt"></i> Dashboard
+            </a>
+            <a href="/expenses">
+                <i class="fas fa-receipt"></i> All Expenses
+            </a>
+            <a href="/logout">
+                <i class="fas fa-sign-out-alt"></i> Logout
+            </a>
         </nav>
     </aside>
 
     <!-- Main Content -->
     <main>
-        <header>
-            <h1>Welcome, <span th:text="${user.username}">User</span>!</h1>
+        <header class="page-header">
+            <div class="header-content">
+                <h1><i class="fas fa-tachometer-alt"></i> Dashboard Overview</h1>
+                <div class="user-welcome">
+                    Welcome back, <span class="username" th:text="${user.username}">User</span>!
+                </div>
+            </div>
         </header>
 
         <div class="dashboard-layout">
@@ -35,7 +48,7 @@
                             <span class="stat-label">All Time Total</span>
                         </div>
                         <div class="stat-change">
-                            YoY: <span id="yoyChange" class="negative">0%</span>
+                            YoY: <span id="yoyChange" class="neutral">0%</span>
                         </div>
                         <div class="yearly-breakdown">
                             <div class="year-item">
@@ -68,82 +81,130 @@
 
                 <!-- Charts Section -->
                 <div class="charts-container">
-                    <div class="chart-wrapper">
+                    <div class="chart-card full-width">
                         <div class="chart-header">
-                            <div class="chart-title">Yearly Trend (Last 5 Years)</div>
-                        </div>
-                        <div class="chart-container" id="yearlyLineChart-container">
-                            <canvas id="yearlyLineChart"></canvas>
-                        </div>
-                        <div class="chart-legend">
-                            <div class="legend-item">
-                                <div class="legend-color primary"></div>
-                                <span>Total Expenses</span>
+                            <div class="chart-title"><i class="fas fa-chart-line"></i> Yearly Trend (Last 5 Years)</div>
+                            <div class="chart-actions">
+                                <button class="chart-action-btn active" data-period="yearly">Yearly</button>
+                                <button class="chart-action-btn" data-period="quarterly">Quarterly</button>
                             </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="yearlyLineChart"></canvas>
                         </div>
                     </div>
 
-                    <div class="chart-wrapper">
+                    <div class="chart-card">
                         <div class="chart-header">
-                            <div class="chart-title">Expenses by Category</div>
+                            <div class="chart-title"><i class="fas fa-chart-bar"></i> Expenses by Category</div>
                         </div>
-                        <div class="chart-container" id="categoryBarChart-container">
+                        <div class="chart-container">
                             <canvas id="categoryBarChart"></canvas>
                         </div>
                     </div>
                 </div>
 
                 <!-- Monthly Expenses Breakdown Table -->
-                <div class="table-container">
-                    <h2>Monthly Expenses Breakdown - <span id="currentYearLabel"></span></h2>
-                    <table id="monthlyExpensesTable">
-                        <thead>
-                        <tr>
-                            <th>Month</th>
-                            <th>Total Amount</th>
-                            <th># of Expenses</th>
-                            <th>Avg per Expense</th>
-                            <th>vs Previous Month</th>
-                        </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                <div class="table-card">
+                    <div class="table-header">
+                        <h2><i class="fas fa-table"></i> Monthly Expenses Breakdown - <span id="currentYearLabel"></span></h2>
+                        <button class="refresh-btn" onclick="refreshDashboard()">
+                            <i class="fas fa-sync-alt"></i> Refresh
+                        </button>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="monthlyExpensesTable">
+                            <thead>
+                            <tr>
+                                <th>Month</th>
+                                <th>Total Amount</th>
+                                <th># of Expenses</th>
+                                <th>Avg per Expense</th>
+                                <th>vs Previous Month</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
             <div class="right-column">
                 <!-- Category Distribution -->
-                <div class="chart-wrapper">
+                <div class="chart-card">
                     <div class="chart-header">
-                        <div class="chart-title">Category Distribution</div>
+                        <div class="chart-title"><i class="fas fa-chart-pie"></i> Category Distribution</div>
                     </div>
-                    <div class="chart-container" id="categoryPieChart-container">
+                    <div class="chart-container">
                         <canvas id="categoryPieChart"></canvas>
                     </div>
+                    <div class="chart-legend" id="pieChartLegend"></div>
                 </div>
 
                 <!-- Top 5 Highest Expenses -->
-                <div class="table-container">
-                    <h2>Top 5 Highest Expenses</h2>
-                    <table id="topExpensesTable">
-                        <thead>
-                        <tr>
-                            <th>Title</th>
-                            <th>Amount</th>
-                            <th>Category</th>
-                            <th>Date</th>
-                        </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
+                <div class="table-card">
+                    <div class="table-header">
+                        <h2><i class="fas fa-trophy"></i> Top 5 Highest Expenses</h2>
+                    </div>
+                    <div class="table-wrapper">
+                        <table id="topExpensesTable">
+                            <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Amount</th>
+                                <th>Category</th>
+                                <th>Date</th>
+                            </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 </div>
 
-<script th:inline="javascript">
-// Set current year labels
+<!-- Enhanced Monthly Breakdown Modal -->
+<div id="monthModal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2><i class="fas fa-calendar-alt"></i> <span id="modalMonthYear">Month Details</span></h2>
+            <span class="close-button">&times;</span>
+        </div>
+        <div class="modal-body">
+            <div class="modal-stats">
+                <div class="modal-stat">
+                    <span class="modal-stat-value" id="modalTotalAmount">₱0.00</span>
+                    <span class="modal-stat-label">Total Amount</span>
+                </div>
+                <div class="modal-stat">
+                    <span class="modal-stat-value" id="modalExpenseCount">0</span>
+                    <span class="modal-stat-label">Expenses</span>
+                </div>
+                <div class="modal-stat">
+                    <span class="modal-stat-value" id="modalAverageAmount">₱0.00</span>
+                    <span class="modal-stat-label">Average</span>
+                </div>
+            </div>
+            <div class="table-wrapper">
+                <table id="monthExpensesTable">
+                    <thead>
+                        <tr>
+                            <th>Title</th>
+                            <th>Amount</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
 const currentYear = new Date().getFullYear();
 document.getElementById('currentYear').textContent = currentYear;
 document.getElementById('lastYear').textContent = currentYear - 1;
@@ -159,23 +220,34 @@ var pieChart = new Chart(pieCtx, {
     type:'pie', 
     data:{ 
         labels:[], 
-        datasets:[{
+        datasets:[{ 
             label:'Category Distribution', 
             data:[], 
             backgroundColor:chartColors, 
-            hoverOffset:10,
-            borderWidth: 2,
-            borderColor: '#fff'
+            borderWidth: 2, 
+            borderColor:'#fff',
+            hoverOffset: 15
         }] 
     },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'right'
+    options:{ 
+        responsive:true, 
+        maintainAspectRatio:false, 
+        plugins:{ 
+            legend:{ 
+                display: false
+            },
+            tooltip: {
+                callbacks: {
+                    label: function(context) {
+                        const label = context.label || '';
+                        const value = context.raw || 0;
+                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                        const percentage = ((value / total) * 100).toFixed(1);
+                        return `${label}: ₱${value.toLocaleString()} (${percentage}%)`;
+                    }
+                }
             }
-        }
+        } 
     }
 });
 
@@ -183,265 +255,251 @@ var barChart = new Chart(barCtx, {
     type:'bar', 
     data:{ 
         labels:[], 
-        datasets:[{
+        datasets:[{ 
             label:'Category Totals', 
             data:[], 
-            backgroundColor: chartColors
+            backgroundColor: chartColors,
+            borderRadius: 6,
+            borderWidth: 0
         }] 
     },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    callback: function(value) {
-                        return '₱' + value.toLocaleString();
-                    }
-                }
-            }
-        }
-    }
+    options:{ 
+        responsive:true, 
+        maintainAspectRatio:false, 
+        plugins:{ 
+            legend:{ display:false } 
+        }, 
+        scales:{ 
+            y:{ 
+                beginAtZero:true, 
+                ticks:{ 
+                    callback:value=>'₱'+value.toLocaleString() 
+                } 
+            } 
+        } 
+    } 
 });
 
 var lineChart = new Chart(lineCtx, { 
     type:'line', 
     data:{ 
         labels:[], 
-        datasets:[{
+        datasets:[{ 
             label:'Yearly Expenses', 
             data:[], 
             borderColor:'#6a11cb', 
             backgroundColor:'rgba(106, 17, 203, 0.1)', 
             fill:true, 
-            tension:0.3,
-            borderWidth: 3
-        }]
+            tension:0.4, 
+            borderWidth:3,
+            pointBackgroundColor: '#6a11cb',
+            pointBorderColor: '#fff',
+            pointBorderWidth: 2,
+            pointRadius: 6,
+            pointHoverRadius: 8
+        }] 
     },
-    options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                ticks: {
-                    callback: function(value) {
-                        return '₱' + value.toLocaleString();
-                    }
-                }
-            }
-        }
-    }
+    options:{ 
+        responsive:true, 
+        maintainAspectRatio:false, 
+        plugins:{ 
+            legend:{ display:false } 
+        }, 
+        scales:{ 
+            y:{ 
+                beginAtZero:true, 
+                ticks:{ 
+                    callback:value=>'₱'+value.toLocaleString() 
+                } 
+            } 
+        } 
+    } 
 });
 
-// Function to format date for top expenses (date only)
-function formatDateOnly(dateString) {
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
+// Utilities
+function formatPeso(amount){ 
+    return '₱' + amount.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); 
 }
 
-// Function to format currency in Philippine Peso
-function formatPeso(amount) {
-    return '₱' + amount.toFixed(2);
+function formatDateOnly(dateString){ 
+    return new Date(dateString).toLocaleDateString(); 
 }
 
-// Function to get month name from month number
-function getMonthName(monthNumber) {
-    const months = [
-        'January', 'February', 'March', 'April', 'May', 'June',
-        'July', 'August', 'September', 'October', 'November', 'December'
-    ];
-    return months[monthNumber - 1] || '';
+function getMonthName(monthNumber){ 
+    return ['January','February','March','April','May','June','July','August','September','October','November','December'][monthNumber-1]; 
 }
 
-// Function to calculate percentage change with text indicator
-function getPercentageChange(current, previous) {
-    if (previous === 0) return { text: 'No data', change: 0, type: 'neutral' };
-    
-    const change = ((current - previous) / previous * 100);
-    const absChange = Math.abs(change);
-    
-    if (absChange < 5) {
-        return { 
-            text: 'Stable', 
-            change: change, 
-            type: 'neutral' 
-        };
-    } else if (change > 0) {
-        return { 
-            text: `+${change.toFixed(1)}%`, 
-            change: change, 
-            type: 'increase' 
-        };
-    } else {
-        return { 
-            text: `${change.toFixed(1)}%`, 
-            change: change, 
-            type: 'decrease' 
-        };
-    }
+function getPercentageChange(current, previous){ 
+    if(previous===0) return { text:'No data', type:'neutral' }; 
+    const change=((current-previous)/previous)*100; 
+    if(Math.abs(change)<5) return { text:'Stable', type:'neutral' }; 
+    return { 
+        text:(change>0?'▲ ':'▼ ')+(change>0?'+':'')+change.toFixed(1)+'%', 
+        type:(change>0?'increase':'decrease') 
+    }; 
 }
 
-function refreshDashboard() {
+function updatePieChartLegend(labels, values) {
+    const total = values.reduce((sum, value) => sum + value, 0);
+    const legendHtml = labels.map((label, index) => {
+        const percentage = ((values[index] / total) * 100).toFixed(1);
+        return `
+            <div class="legend-item">
+                <span class="legend-color" style="background-color: ${chartColors[index % chartColors.length]}"></span>
+                <span class="legend-label">${label}</span>
+                <span class="legend-value">${percentage}%</span>
+            </div>
+        `;
+    }).join('');
+    document.getElementById('pieChartLegend').innerHTML = legendHtml;
+}
+
+function refreshDashboard(){
     $.get("/expenses/list", function(data){
-        // Top 5 highest expenses (sort by amount, show date only)
-        var top5 = data.sort((a,b)=> b.amount - a.amount).slice(0,5);
-        var topHTML = top5.map(e=>`<tr><td>${e.title}</td><td>${formatPeso(e.amount)}</td><td>${e.category}</td><td>${formatDateOnly(e.date)}</td></tr>`).join('');
+        data.forEach(e=>{ e.categoryName = e.category? e.category.name : 'Uncategorized'; });
+
+        // Top 5
+        let top5 = data.sort((a,b)=>b.amount - a.amount).slice(0,5);
+        let topHTML = top5.map(e=>`
+            <tr>
+                <td>${e.title}</td>
+                <td>${formatPeso(e.amount)}</td>
+                <td><span class="category-badge">${e.categoryName}</span></td>
+                <td>${formatDateOnly(e.date)}</td>
+            </tr>
+        `).join('');
         $("#topExpensesTable tbody").html(topHTML);
 
         // Stats
-        var total = data.reduce((sum,e)=>sum+e.amount,0);
-        var highest = data.reduce((max,e)=>e.amount>max?e.amount:max,0);
+        let total = data.reduce((sum,e)=>sum+e.amount,0);
+        let highest = data.reduce((max,e)=>e.amount>max?e.amount:max,0);
         $("#totalExpenses").text(formatPeso(total));
-        $("#numExpenses").text(data.length);
+        $("#numExpenses").text(data.length.toLocaleString());
         $("#highestExpense").text(formatPeso(highest));
 
-        // Yearly calculations
-        var currentYear = new Date().getFullYear();
-        var lastYear = currentYear - 1;
-        
-        var currentYearTotal = data
-            .filter(e => new Date(e.date).getFullYear() === currentYear)
-            .reduce((sum,e)=>sum+e.amount,0);
-            
-        var lastYearTotal = data
-            .filter(e => new Date(e.date).getFullYear() === lastYear)
-            .reduce((sum,e)=>sum+e.amount,0);
-
-        // Update yearly breakdown
+        // Yearly totals
+        let currentYearTotal = data.filter(e=>new Date(e.date).getFullYear()===currentYear).reduce((sum,e)=>sum+e.amount,0);
+        let lastYearTotal = data.filter(e=>new Date(e.date).getFullYear()===currentYear-1).reduce((sum,e)=>sum+e.amount,0);
         $("#currentYearTotal").text(formatPeso(currentYearTotal));
         $("#lastYearTotal").text(formatPeso(lastYearTotal));
-        
-        // Calculate year-over-year change
-        var yoyChange = lastYearTotal > 0 ? ((currentYearTotal - lastYearTotal) / lastYearTotal * 100).toFixed(1) : 0;
-        var yoyElement = $("#yoyChange");
-        yoyElement.text(yoyChange + "%");
-        if (yoyChange > 0) {
-            yoyElement.removeClass('negative').addClass('positive');
-        } else {
-            yoyElement.removeClass('positive').addClass('negative');
-        }
 
-        // Update expense count change
-        var currentYearCount = data.filter(e => new Date(e.date).getFullYear() === currentYear).length;
-        var lastYearCount = data.filter(e => new Date(e.date).getFullYear() === lastYear).length;
-        var countChange = currentYearCount - lastYearCount;
-        var countElement = $(".stat-card:nth-child(2) .stat-change");
-        countElement.text(countChange >= 0 ? "+ " + countChange : "- " + Math.abs(countChange));
-        countElement.toggleClass('positive', countChange >= 0);
-        countElement.toggleClass('negative', countChange < 0);
+        let yoyChangeData = getPercentageChange(currentYearTotal, lastYearTotal);
+        let yoyElement = $("#yoyChange");
+        yoyElement.text(yoyChangeData.text);
+        yoyElement.removeClass('positive negative neutral').addClass(yoyChangeData.type);
 
-        // Monthly Expenses Breakdown
-        var monthlyData = {};
-        var currentYearData = data.filter(e => new Date(e.date).getFullYear() === currentYear);
-        
-        // Initialize all months for current year
-        for (let month = 1; month <= 12; month++) {
-            var monthKey = `${currentYear}-${month.toString().padStart(2, '0')}`;
-            monthlyData[monthKey] = {
-                total: 0,
-                count: 0,
-                expenses: []
-            };
-        }
-        
-        // Calculate monthly totals
-        currentYearData.forEach(e=>{
-            let date = new Date(e.date);
-            let monthKey = `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}`;
-            if (monthlyData[monthKey]) {
-                monthlyData[monthKey].total += e.amount;
-                monthlyData[monthKey].count += 1;
-                monthlyData[monthKey].expenses.push(e);
-            }
+        // Expense count change
+        let currentCount = data.filter(e=>new Date(e.date).getFullYear()===currentYear).length;
+        let lastCount = data.filter(e=>new Date(e.date).getFullYear()===currentYear-1).length;
+        let countChange = currentCount-lastCount;
+        let countElement = $(".stat-card:nth-child(2) .stat-change");
+        countElement.text((countChange>=0?'▲ ':'▼ ')+Math.abs(countChange));
+        countElement.toggleClass('positive', countChange>=0);
+        countElement.toggleClass('negative', countChange<0);
+
+        // Monthly table
+        let monthlyData = {};
+        for(let m=1;m<=12;m++){ monthlyData[m]={total:0,count:0,expenses:[]}; }
+        data.filter(e=>new Date(e.date).getFullYear()===currentYear).forEach(e=>{
+            let month = new Date(e.date).getMonth()+1;
+            monthlyData[month].total+=e.amount; 
+            monthlyData[month].count+=1;
+            monthlyData[month].expenses.push(e);
         });
+        let prevTotal=0; let monthlyHTML='';
+        for(let m=1;m<=12;m++){
+            let avg = monthlyData[m].count>0?monthlyData[m].total/monthlyData[m].count:0;
+            let changeData=getPercentageChange(monthlyData[m].total,prevTotal);
 
-        // Generate monthly table HTML
-        var monthlyHTML = '';
-        var previousMonthTotal = 0;
-        var monthKeys = Object.keys(monthlyData).sort().reverse();
-        
-        monthKeys.forEach((monthKey, index) => {
-            var monthData = monthlyData[monthKey];
-            var monthNumber = parseInt(monthKey.split('-')[1]);
-            var monthName = getMonthName(monthNumber);
-            var avgExpense = monthData.count > 0 ? monthData.total / monthData.count : 0;
-            
-            // Calculate percentage change (compare with previous month)
-            var changeData = { text: 'No data', change: 0, type: 'neutral' };
-            if (index < monthKeys.length - 1) {
-                var previousMonthKey = monthKeys[index + 1];
-                var previousMonthData = monthlyData[previousMonthKey];
-                changeData = getPercentageChange(monthData.total, previousMonthData.total);
-            }
-            
-            monthlyHTML += `<tr>
-                <td>${monthName}</td>
-                <td>${formatPeso(monthData.total)}</td>
-                <td>${monthData.count}</td>
-                <td>${formatPeso(avgExpense)}</td>
-                <td class="trend-${changeData.type}">${changeData.text}</td>
+            monthlyHTML+=`<tr class="month-row" data-month="${m}">
+                <td>${getMonthName(m)}</td>
+                <td>${formatPeso(monthlyData[m].total)}</td>
+                <td>${monthlyData[m].count.toLocaleString()}</td>
+                <td>${formatPeso(avg)}</td>
+                <td class="trend-${changeData.type}">
+                    <i class="fas ${changeData.type === 'increase' ? 'fa-arrow-up' : changeData.type === 'decrease' ? 'fa-arrow-down' : 'fa-minus'}"></i>
+                    ${changeData.text}
+                </td>
             </tr>`;
-        });
-        
+            prevTotal=monthlyData[m].total;
+        }
         $("#monthlyExpensesTable tbody").html(monthlyHTML);
 
-        // Charts - Category distribution
-        var categories = {};
-        var displayNames = {};
-        data.forEach(e=>{
-            var k = e.category.toLowerCase();
-            categories[k]=(categories[k]||0)+e.amount;
-            if(!displayNames[k]) displayNames[k] = e.category.charAt(0).toUpperCase()+e.category.slice(1).toLowerCase();
+        // Click event for month rows
+        $(".month-row").click(function(){
+            let month = $(this).data('month');
+            let monthName = getMonthName(month);
+            let monthExpenses = monthlyData[month].expenses;
+
+            let modalHTML = monthExpenses.map(e=>`
+                <tr>
+                    <td>${e.title}</td>
+                    <td>${formatPeso(e.amount)}</td>
+                    <td><span class="category-badge">${e.categoryName}</span></td>
+                    <td>${formatDateOnly(e.date)}</td>
+                </tr>
+            `).join('');
+            
+            $("#monthExpensesTable tbody").html(modalHTML);
+            $("#modalMonthYear").text(`${monthName} ${currentYear}`);
+            $("#modalTotalAmount").text(formatPeso(monthlyData[month].total));
+            $("#modalExpenseCount").text(monthlyData[month].count);
+            $("#modalAverageAmount").text(formatPeso(monthlyData[month].count > 0 ? monthlyData[month].total / monthlyData[month].count : 0));
+            
+            $("#monthModal").fadeIn();
         });
 
-        pieChart.data.labels = Object.keys(categories).map(k=>displayNames[k]);
-        pieChart.data.datasets[0].data = Object.values(categories);
+        // Charts - Category
+        let categoryTotals={};
+        data.forEach(e=>{ categoryTotals[e.categoryName]=(categoryTotals[e.categoryName]||0)+e.amount; });
+        let labels = Object.keys(categoryTotals);
+        let values = Object.values(categoryTotals);
+        pieChart.data.labels=labels; 
+        pieChart.data.datasets[0].data=values; 
         pieChart.update();
-
-        barChart.data.labels = Object.keys(categories).map(k=>displayNames[k]);
-        barChart.data.datasets[0].data = Object.values(categories);
+        
+        barChart.data.labels=labels; 
+        barChart.data.datasets[0].data=values; 
         barChart.update();
+        
+        updatePieChartLegend(labels, values);
 
-        // Yearly trend data (last 5 years)
-        var yearlyTotals = {};
-        var currentYear = new Date().getFullYear();
-        
-        // Initialize last 5 years
-        for (let i = 4; i >= 0; i--) {
-            var year = currentYear - i;
-            yearlyTotals[year] = 0;
-        }
-        
-        // Calculate totals for each year
-        data.forEach(e=>{
-            let year = new Date(e.date).getFullYear();
-            if (yearlyTotals.hasOwnProperty(year)) {
-                yearlyTotals[year] = (yearlyTotals[year] || 0) + e.amount;
-            }
+        // Yearly trend
+        let yearlyTotals={}; 
+        for(let i=4;i>=0;i--){ yearlyTotals[currentYear-i]=0; }
+        data.forEach(e=>{ 
+            let y=new Date(e.date).getFullYear(); 
+            if(yearlyTotals[y]!==undefined) yearlyTotals[y]+=e.amount; 
         });
-
-        // Update line chart for yearly trend
-        var years = Object.keys(yearlyTotals).sort();
-        lineChart.data.labels = years;
-        lineChart.data.datasets[0].data = years.map(y=>yearlyTotals[y]);
-        lineChart.data.datasets[0].label = 'Yearly Expenses';
+        let years=Object.keys(yearlyTotals);
+        lineChart.data.labels=years; 
+        lineChart.data.datasets[0].data=years.map(y=>yearlyTotals[y]); 
         lineChart.update();
     });
 }
 
-refreshDashboard();
+// Modal close functionality
+$(".close-button").click(function(){ 
+    $("#monthModal").fadeOut(); 
+});
+
+$(window).click(function(event){ 
+    if(event.target.id==="monthModal"){ 
+        $("#monthModal").fadeOut(); 
+    } 
+});
+
+// Chart period switching
+$(".chart-action-btn").click(function(){
+    $(".chart-action-btn").removeClass("active");
+    $(this).addClass("active");
+    // Add logic to switch between yearly and quarterly views
+});
+
+// Initialize dashboard
+$(document).ready(function(){
+    refreshDashboard();
+});
 </script>
 </body>
 </html>
