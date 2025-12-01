@@ -14,6 +14,7 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private UserRepository userRepository;
 
+    // Registers a new user
     @Override
     public User register(User user) {
         if (userRepository.findByEmail(user.getEmail()) != null) {
@@ -22,6 +23,7 @@ public class UserServiceImpl implements UserService {
         return userRepository.save(user);
     }
 
+    // Logs in a user with the given email and password
     @Override
     public User login(String email, String password) {
         if (email == null || password == null) return null;

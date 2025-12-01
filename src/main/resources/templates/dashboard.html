@@ -86,7 +86,7 @@
                             <div class="chart-title"><i class="fas fa-chart-line"></i> Yearly Trend (Last 5 Years)</div>
                             <div class="chart-actions">
                                 <button class="chart-action-btn active" data-period="yearly">Yearly</button>
-                                <button class="chart-action-btn" data-period="quarterly">Quarterly</button>
+                               
                             </div>
                         </div>
                         <div class="chart-container">
@@ -120,7 +120,8 @@
                                 <th>Total Amount</th>
                                 <th># of Expenses</th>
                                 <th>Avg per Expense</th>
-                                <th>vs Previous Month</th>
+                                <th>Peso Change</th>
+                                <th>% Change vs Previous Month</th>
                             </tr>
                             </thead>
                             <tbody></tbody>
@@ -406,24 +407,38 @@ function refreshDashboard(){
             monthlyData[month].count+=1;
             monthlyData[month].expenses.push(e);
         });
-        let prevTotal=0; let monthlyHTML='';
+
+        let prevTotal=0; 
+        let monthlyHTML='';
+
         for(let m=1;m<=12;m++){
-            let avg = monthlyData[m].count>0?monthlyData[m].total/monthlyData[m].count:0;
-            let changeData=getPercentageChange(monthlyData[m].total,prevTotal);
+            let avg = monthlyData[m].count>0 ? monthlyData[m].total/monthlyData[m].count : 0;
+
+            // Calculate changes
+            let pesoChange = monthlyData[m].total - prevTotal;
+            let changeData = getPercentageChange(monthlyData[m].total, prevTotal);
 
             monthlyHTML+=`<tr class="month-row" data-month="${m}">
                 <td>${getMonthName(m)}</td>
                 <td>${formatPeso(monthlyData[m].total)}</td>
                 <td>${monthlyData[m].count.toLocaleString()}</td>
                 <td>${formatPeso(avg)}</td>
-                <td class="trend-${changeData.type}">
+                <td class="peso-change ${pesoChange > 0 ? 'increase' : pesoChange < 0 ? 'decrease' : 'neutral'}">
+                    ${pesoChange > 0 ? '▲ ' : pesoChange < 0 ? '▼ ' : ''}${formatPeso(Math.abs(pesoChange))}
+                </td>
+
+
+                <td class="percent-change trend-${changeData.type}">
                     <i class="fas ${changeData.type === 'increase' ? 'fa-arrow-up' : changeData.type === 'decrease' ? 'fa-arrow-down' : 'fa-minus'}"></i>
                     ${changeData.text}
                 </td>
             </tr>`;
-            prevTotal=monthlyData[m].total;
+
+            prevTotal = monthlyData[m].total;
         }
+
         $("#monthlyExpensesTable tbody").html(monthlyHTML);
+
 
         // Click event for month rows
         $(".month-row").click(function(){

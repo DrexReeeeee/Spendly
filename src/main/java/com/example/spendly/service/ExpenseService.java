@@ -5,6 +5,7 @@ import com.example.spendly.model.User;
 
 import java.util.List;
 
+// Service interface for Expense entity
 public interface ExpenseService {
     List<Expense> getExpenses(User user);
 

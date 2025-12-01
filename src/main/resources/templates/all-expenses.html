@@ -301,16 +301,29 @@ $("#categoryNextPage").click(function(){
 $("#addCategoryBtn").click(function(){
     const name = $("#newCategoryName").val().trim();
     if (!name) {
-        showNotification('Please enter a category name', 'error');
+        showNotification('Please enter a category name');
         return;
     }
     
-    $.post("/categories/add", {name}, function(){
-        $("#newCategoryName").val('');
-        loadCategories();
-        showNotification('Category added successfully!', 'success');
-    }).fail(() => showNotification('Error adding category', 'error'));
+    $.ajax({
+        url: "/categories/add",
+        type: "POST",
+        data: { name: name },
+        success: function (data) {
+            $("#newCategoryName").val("");
+            loadCategories();
+            showNotification("Category added successfully!");
+        },
+        error: function (xhr) {
+            if (xhr.status === 409) {
+                showNotification("Category already exists");
+            } else {
+                showNotification("Category already exists");
+            }
+        }
+    });
 });
+
 
 // Handle Enter key in category input
 $("#newCategoryName").keypress(function(e){

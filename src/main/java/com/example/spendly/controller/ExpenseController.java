@@ -42,6 +42,8 @@ public class ExpenseController {
         return "all-expenses";
     }
 
+
+    // Gets the list of expenses for the logged-in user
     @GetMapping("/list")
     @ResponseBody
     public List<Expense> listExpenses(HttpSession session) {
@@ -52,6 +54,7 @@ public class ExpenseController {
         return new ArrayList<>();
     }
 
+    // Adds a new expense for the logged-in user
     @PostMapping("/add")
     @ResponseBody
     public Expense addExpense(@RequestParam String title,
@@ -68,6 +71,7 @@ public class ExpenseController {
         return null;
     }
 
+    // Updates an existing expense for the logged-in user
     @PostMapping("/update/{id}")
     @ResponseBody
     public Expense updateExpense(@PathVariable Long id,
@@ -92,6 +96,7 @@ public class ExpenseController {
         return null;
     }
 
+    // Deletes an expense by its ID for the logged-in user
     @PostMapping("/delete/{id}")
     @ResponseBody
     public String deleteExpense(@PathVariable Long id, HttpSession session) {

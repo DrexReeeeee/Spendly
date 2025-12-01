@@ -6,6 +6,7 @@ import com.example.spendly.model.User;
 import java.util.List;
 import java.util.Optional;
 
+// Service interface for Category entity
 public interface CategoryService {
     List<Category> getCategories(User user);
     Category addCategory(String name, User user);

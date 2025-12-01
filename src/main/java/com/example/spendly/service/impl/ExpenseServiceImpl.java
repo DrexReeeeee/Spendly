@@ -15,21 +15,25 @@ public class ExpenseServiceImpl implements ExpenseService {
     @Autowired
     private ExpenseRepository expenseRepository;
 
+    // Retrieves all expenses for the specified user
     @Override
     public List<Expense> getExpenses(User user) {
         return expenseRepository.findByUserId(user.getId());
     }
 
+    // Adds a new expense for the specified user
     @Override
     public Expense addExpense(Expense expense) {
         return expenseRepository.save(expense);
     }
 
+    // Updates an existing expense
     @Override
     public Expense updateExpense(Expense expense) {
         return expenseRepository.save(expense);
     }
 
+    // Deletes an expense by its ID
     @Override
     public void deleteExpense(Long id) {
         expenseRepository.deleteById(id);

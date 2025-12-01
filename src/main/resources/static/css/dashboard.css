@@ -679,3 +679,19 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+
+.peso-change.increase {
+    color: #28a745; /* green */
+    font-weight: bold;
+}
+
+.peso-change.decrease {
+    color: #dc3545; /* red */
+    font-weight: bold;
+}
+
+.peso-change.neutral {
+    color: #6c757d; /* gray */
+    font-weight: normal;
+}
+

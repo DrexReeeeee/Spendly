@@ -26,12 +26,14 @@ public class UserController {
         return "redirect:/login";
     }
 
+    // Shows the registration form
     @GetMapping("/register")
     public String showRegisterForm(Model model) {
         model.addAttribute("user", new User());
         return "register";
     }
 
+    // Handles user registration
     @PostMapping("/register")
     public String registerUser(@ModelAttribute User user, Model model) {
         try {
@@ -44,12 +46,14 @@ public class UserController {
         }
     }
 
+    // Shows the login form
     @GetMapping("/login")
     public String showLoginForm(Model model) {
         model.addAttribute("user", new User());
         return "login";
     }
 
+    // Handles user login
     @PostMapping("/login")
     public String loginUser(@ModelAttribute User user, HttpSession session, Model model) {
         User loggedIn = userService.login(user.getEmail(), user.getPassword());
@@ -61,6 +65,7 @@ public class UserController {
         return "login";
     }
 
+    // Displays the user dashboard
     @GetMapping("/dashboard")
     public String dashboard(HttpSession session, Model model) {
         User user = (User) session.getAttribute("user");
@@ -75,6 +80,7 @@ public class UserController {
         return "dashboard";
     }
 
+    // Handles user logout
     @GetMapping("/logout")
     public String logout(HttpSession session) {
         session.invalidate();
